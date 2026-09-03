@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloxdShorts</title> <link rel="icon" type="image/png" href="/bloxd-scene.png?v=1"> 
+    <title>BLOXDSHORTS</title><link rel="icon" type="image/png" href="favicon.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #000000; color: #ffffff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -18,8 +18,8 @@
         #shorts-container::-webkit-scrollbar { display: none; }
         .short-section { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background-color: #0b0c10; }
         .short-wrapper { width: 100%; max-width: 90vh; aspect-ratio: 1/1; position: relative; display: flex; align-items: center; background-color: #000000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .short-wrapper video, .short-wrapper iframe { width: 100%; height: 100%; border: none; object-fit: cover; }
-        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; }
+        .short-wrapper video, .short-wrapper iframe { width: 100%; height: 100%; border: none; object-fit: cover; cursor: pointer; }
+        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; pointer-events: none; }
         .short-overlay h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
         .short-overlay p { font-size: 11px; color: #a1a1aa; font-family: monospace; }
     </style>
@@ -52,6 +52,7 @@
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
         const getLinks = () => JSON.parse(atob(decodeURIComponent(new URLSearchParams(window.location.search).get('data') || REG)));
         function shareFeed() { navigator.clipboard.writeText(window.location.href).then(() => alert("Full channel link copied to clipboard!")); }
+        function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
         function loadSharedLinks() {
             try {
                 let links = getLinks(); container.innerHTML = "";
@@ -59,7 +60,7 @@
                 links.reverse().forEach((item) => {
                     const section = document.createElement('div'); section.className = "short-section";
                     let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
-                        `<video src="${item.u}" loop autoplay muted playsinline onclick="this.paused ? this.play() : this.pause()"></video>` : 
+                        `<video src="${item.u}" loop autoplay muted playsinline onclick="handleVolume(this)"></video>` : 
                         `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
                     let tag = item.c || 'Anonymous';
                     section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${tag}</p></div></div>`;
