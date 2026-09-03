@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloxdShorts</title><link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #000000; color: #ffffff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        nav { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; z-index: 50; }
+        .nav-title { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 900; font-size: 22px; color: #ff4757; }
+        .elite-input { padding: 10px 16px; background-color: #11141a; border: 1px solid #1f242e; color: #ffffff; font-size: 13px; font-family: monospace; width: 100%; }
+        .elite-input:focus { border-color: #ff4757; outline: none; }
+        .elite-btn { border: 1px solid #ff4757; background-color: #ff4757; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 20px; font-size: 12px; font-weight: bold; cursor: pointer; color: #ffffff; border-radius: 4px; transition: all 0.2s; }
+        .elite-btn:hover { background-color: transparent; color: #ff4757; }
+        #link-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #11141a; border: 1px solid #1f242e; padding: 32px; width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 16px; border-radius: 8px; }
+        #shorts-container { width: 100%; height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+        #shorts-container::-webkit-scrollbar { display: none; }
+        .short-section { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background-color: #0b0c10; }
+        .short-wrapper { width: 100%; max-width: 90vh; aspect-ratio: 1/1; position: relative; display: flex; align-items: center; background-color: #000000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .short-wrapper video, .short-wrapper iframe { width: 100%; height: 100%; border: none; object-fit: cover; }
+        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; }
+        .short-overlay h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
+        .short-overlay p { font-size: 11px; color: #a1a1aa; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-title">🔥 BLOXDSHORTS</div>
+        <div style="display: flex; gap: 12px;">
+            <button class="elite-btn" style="background: transparent; color: #ff4757;" onclick="shareFeed()">Share Feed</button>
+            <button class="elite-btn" onclick="openModal()">Upload Short</button>
+        </div>
+    </nav>
+    <div id="link-modal">
+        <div class="modal-content">
+            <h2 style="text-transform: uppercase; font-size: 16px; color:#ff4757;">Inject Bloxd Short</h2>
+            <input type="text" id="stream-creator" placeholder="Creator Tag (e.g. Shahadah_Studios)..." class="elite-input">
+            <input type="text" id="stream-title" placeholder="Short Title..." class="elite-input">
+            <input type="text" id="stream-url" placeholder="Paste YouTube link or MP4/WebM URL..." class="elite-input">
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="elite-btn" style="background:transparent; color:#ffffff; border-color:#1f242e;" onclick="closeModal()">Cancel</button>
+                <button class="elite-btn" onclick="submitLink()">Publish</button>
+            </div>
+        </div>
+    </div>
+    <div id="shorts-container"></div>
+    <script>
+        const REG = "W3siYyI6IlNoYWhhZGFoX1N0dWRpb3MiLCJ0IjoiV2VsY29tZSB0byBCbG94ZFNob3J0cyEiLCJ1IjoiaHR0cHM6Ly93d3cuaW1hZ2UydXJsLmNvbS9yMi9kZWZhdWx0L3ZpZGVvcy8xNzg2MzE1MDQ1NzU3LTNjZWI3MzI2LTA2Y2MtNDFiNy05ODVhLTJiM2RjOTU3NWExZS5tcDQifV0=";
+        const container = document.getElementById('shorts-container');
+        const openModal = () => document.getElementById('link-modal').style.display = 'flex';
+        const closeModal = () => document.getElementById('link-modal').style.display = 'none';
+        const getLinks = () => JSON.parse(atob(decodeURIComponent(new URLSearchParams(window.location.search).get('data') || REG)));
+        function shareFeed() { navigator.clipboard.writeText(window.location.href).then(() => alert("Full channel link copied to clipboard!")); }
+        function loadSharedLinks() {
+            try {
+                let links = getLinks(); container.innerHTML = "";
+                if (links.length === 0) { container.innerHTML = '<div class="short-section">No shorts in the pipeline grid yet.</div>'; return; }
+                links.reverse().forEach((item) => {
+                    const section = document.createElement('div'); section.className = "short-section";
+                    let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
+                        `<video src="${item.u}" loop autoplay muted playsinline onclick="this.paused ? this.play() : this.pause()"></video>` : 
+                        `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
+                    let tag = item.c || 'Anonymous';
+                    section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${tag}</p></div></div>`;
+                    container.appendChild(section);
+                });
+            } catch (e) { container.innerHTML = '<div class="short-section">Data corrupted.</div>'; }
+        }
+        function submitLink() {
+            let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
+            if (!t || !u) return;
+            let links = getLinks(); links.push({ c: c, t: t, u: u });
+            let finalUrl = window.location.origin + window.location.pathname + '?data=' + encodeURIComponent(btoa(JSON.stringify(links)));
+            navigator.clipboard.writeText(finalUrl).then(() => { window.location.href = finalUrl; }).catch(() => window.location.href = finalUrl);
+            closeModal();
+        }
+        loadSharedLinks();
+    </script>
+</body>
+</html>
