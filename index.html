@@ -43,15 +43,13 @@
     </div>
     <div id="shorts-container"></div>
     <script>
-        const REPO = "Shahadah-studs/BloxdShorts";
-        const TOKEN = "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";
         const container = document.getElementById('shorts-container');
         const openModal = () => document.getElementById('link-modal').style.display = 'flex';
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
         function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
         async function loadSharedLinks() {
             try {
-                let res = await fetch(`https://githubusercontent.com{REPO}/main/database.json?t=${Date.now()}`);
+                let res = await fetch('/api/shorts');
                 let links = res.ok ? await res.json() : [];
                 container.innerHTML = links.length === 0 ? '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>' : "";
                 links.reverse().forEach((item) => {
@@ -68,12 +66,9 @@
             let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
             try {
-                let url = `https://github.com{REPO}/contents/database.json`;
-                let res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } }), sha = "", current = [];
-                if (res.ok) { let data = await res.json(); sha = data.sha; current = JSON.parse(atob(data.content)); }
-                current.push({ c, t, u });
-                let update = await fetch(url, { method: "PUT", headers: { Authorization: `token ${TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: "Add short", content: btoa(JSON.stringify(current)), sha }) });
+                let update = await fetch('/api/shorts', { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c, t, u }) });
                 if (update.ok) { closeModal(); loadSharedLinks(); }
+                else { alert("Server error during publishing."); }
             } catch (e) { alert("Pipeline connection error."); }
         }
         loadSharedLinks();
