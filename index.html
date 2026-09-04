@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLOXDSHORTS</title><link rel="icon" type="image/png" href="favicon.png">
-    <script src="https://jsdelivr.net"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #000000; color: #ffffff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -44,40 +43,45 @@
     </div>
     <div id="shorts-container"></div>
     <script>
-        const gun = Gun(['https://herokuapp.com', 'https://herokuapp.com', 'https://herokuapp.com']);
+        const CLOUD_URL = "https://kvdb.io";
         const container = document.getElementById('shorts-container');
         const openModal = () => document.getElementById('link-modal').style.display = 'flex';
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
-        let localShorts = [];
         function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
-        function renderShorts() {
-            container.innerHTML = "";
-            if (localShorts.length === 0) { container.innerHTML = '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>'; return; }
-            [...localShorts].reverse().forEach((item) => {
-                const section = document.createElement('div'); section.className = "short-section";
-                let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
-                    `<video src="${item.u}" loop autoplay muted playsinline onclick="handleVolume(this)"></video>` : 
-                    `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
-                section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${item.c}</p></div></div>`;
-                container.appendChild(section);
-            });
+        async function loadSharedLinks() {
+            try {
+                let response = await fetch(CLOUD_URL);
+                if (!response.ok) throw new Error();
+                let links = await response.json();
+                container.innerHTML = "";
+                if (!Array.isArray(links) || links.length === 0) { container.innerHTML = '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>'; return; }
+                links.reverse().forEach((item) => {
+                    const section = document.createElement('div'); section.className = "short-section";
+                    let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
+                        `<video src="${item.u}" loop autoplay muted playsinline onclick="handleVolume(this)"></video>` : 
+                        `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
+                    section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${item.c}</p></div></div>`;
+                    container.appendChild(section);
+                });
+            } catch (e) { container.innerHTML = '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>'; }
         }
-        gun.get('streambloxd_shorts_master_v14').map().on((data) => {
-            if(data && data.u && data.t) {
-                if (!localShorts.some(s => s.u === data.u)) {
-                    localShorts.push(data);
-                    renderShorts();
-                }
-            }
-        });
-        function submitLink() {
+        async function submitLink() {
             let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
-            gun.get('streambloxd_shorts_master_v14').set({ c: c, t: t, u: u });
-            closeModal();
-            document.getElementById('stream-creator').value = ""; document.getElementById('stream-title').value = ""; document.getElementById('stream-url').value = "";
+            try {
+                let res = await fetch(CLOUD_URL);
+                let currentLinks = res.ok ? await res.json() : [];
+                if (!Array.isArray(currentLinks)) currentLinks = [];
+                currentLinks.push({ c: c, t: t, u: u });
+                await fetch(CLOUD_URL, { method: 'POST', body: JSON.stringify(currentLinks) });
+                closeModal();
+                document.getElementById('stream-creator').value = ""; document.getElementById('stream-title').value = ""; document.getElementById('stream-url').value = "";
+                loadSharedLinks();
+            } catch (e) { alert("Pipeline connection error. Try again!"); }
         }
+        loadSharedLinks();
     </script>
 </body>
 </html>
+
 
