@@ -43,17 +43,17 @@
     </div>
     <div id="shorts-container"></div>
     <script>
-        const BLOB_URL = "https://jsonblob.com";
+        const REPO = "Shahadah-studs/BloxdShorts";
+        const TOKEN = "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN";
         const container = document.getElementById('shorts-container');
         const openModal = () => document.getElementById('link-modal').style.display = 'flex';
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
         function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
         async function loadSharedLinks() {
             try {
-                let response = await fetch("https://jsonblob.com");
-                let links = response.ok ? await response.json() : [];
-                container.innerHTML = "";
-                if (!Array.isArray(links) || links.length === 0) { container.innerHTML = '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>'; return; }
+                let res = await fetch(`https://githubusercontent.com{REPO}/main/database.json?t=${Date.now()}`);
+                let links = res.ok ? await res.json() : [];
+                container.innerHTML = links.length === 0 ? '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>' : "";
                 links.reverse().forEach((item) => {
                     const section = document.createElement('div'); section.className = "short-section";
                     let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
@@ -67,8 +67,14 @@
         async function submitLink() {
             let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
-            alert("Local injection ready! If the public server blocks writing, please check your network or use the backup code copy method.");
-            closeModal();
+            try {
+                let url = `https://github.com{REPO}/contents/database.json`;
+                let res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } }), sha = "", current = [];
+                if (res.ok) { let data = await res.json(); sha = data.sha; current = JSON.parse(atob(data.content)); }
+                current.push({ c, t, u });
+                let update = await fetch(url, { method: "PUT", headers: { Authorization: `token ${TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: "Add short", content: btoa(JSON.stringify(current)), sha }) });
+                if (update.ok) { closeModal(); loadSharedLinks(); }
+            } catch (e) { alert("Pipeline connection error."); }
         }
         loadSharedLinks();
     </script>
