@@ -27,17 +27,17 @@
 <body>
     <nav>
         <div class="nav-title">🔥 BLOXDSHORTS</div>
-        <button class="elite-btn" onclick="openModal()">Upload Short</button>
+        <button class="elite-btn" onclick="openModal()">Submit Short</button>
     </nav>
     <div id="link-modal">
         <div class="modal-content">
-            <h2>Inject Bloxd Short</h2>
+            <h2>Submit Bloxd Short</h2>
             <input type="text" id="stream-creator" placeholder="Creator Tag (e.g. Shahadah_Studios)..." class="elite-input">
             <input type="text" id="stream-title" placeholder="Short Title..." class="elite-input">
             <input type="text" id="stream-url" placeholder="Paste YouTube link or MP4/WebM URL..." class="elite-input">
             <div style="display: flex; gap: 12px; justify-content: flex-end;">
                 <button class="elite-btn" style="background:transparent; color:#ffffff; border-color:#1f242e;" onclick="closeModal()">Cancel</button>
-                <button class="elite-btn" onclick="submitLink()">Publish</button>
+                <button class="elite-btn" onclick="submitLink()">Generate Code</button>
             </div>
         </div>
     </div>
@@ -49,10 +49,11 @@
         function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
         async function loadSharedLinks() {
             try {
-                let res = await fetch('/api/shorts');
+                let res = await fetch(`database.json?t=${Date.now()}`);
                 let links = res.ok ? await res.json() : [];
-                container.innerHTML = links.length === 0 ? '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>' : "";
-                links.reverse().forEach((item) => {
+                container.innerHTML = "";
+                if (links.length === 0) { container.innerHTML = '<div class="short-section">Welcome to BloxdShorts! Click Submit to generate clip feed parameters.</div>'; return; }
+                [...links].reverse().forEach((item) => {
                     const section = document.createElement('div'); section.className = "short-section";
                     let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
                         `<video src="${item.u}" loop autoplay muted playsinline onclick="handleVolume(this)"></video>` : 
@@ -60,21 +61,18 @@
                     section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${item.c}</p></div></div>`;
                     container.appendChild(section);
                 });
-            } catch (e) { container.innerHTML = '<div class="short-section">No shorts in the cloud grid yet. Be the first!</div>'; }
+            } catch (e) { container.innerHTML = '<div class="short-section">Welcome to BloxdShorts! Click Submit to generate clip feed parameters.</div>'; }
         }
-        async function submitLink() {
+        function submitLink() {
             let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
-            try {
-                let update = await fetch('/api/shorts', { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify({ c, t, u }) });
-                if (update.ok) { closeModal(); loadSharedLinks(); }
-                else { alert("Server error during publishing."); }
-            } catch (e) { alert("Pipeline connection error."); }
+            let snippet = `,{"c":"${c}","t":"${t}","u":"${u}"}`;
+            navigator.clipboard.writeText(snippet).then(() => {
+                alert("Success! Your submission code has been copied to your clipboard. Send this code line to @Shahadah_Studios on BloxdHub or Discord to get featured live on the feed!");
+            }).catch(() => { alert("Copy this code line manually:\n" + snippet); });
+            closeModal();
         }
         loadSharedLinks();
     </script>
 </body>
 </html>
-
-
-
