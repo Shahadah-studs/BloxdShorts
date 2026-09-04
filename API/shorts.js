@@ -9,17 +9,23 @@ export default async function handler(request, response) {
                 "Authorization": `token ${TOKEN}`,
                 "User-Agent": "Vercel-Serverless"
             } 
-        }), sha = "", current = [];
+        });
+        
+        let sha = "";
+        let current = [];
         
         if (res.ok) { 
             let data = await res.json(); 
             sha = data.sha; 
-            current = JSON.parse(atob(data.content)); 
+            let decoded = Buffer.from(data.content, 'base64').toString('utf8');
+            current = JSON.parse(decoded); 
         }
         
         if (request.method === 'POST') {
             const { c, t, u } = request.body;
             current.push({ c, t, u });
+            
+            let encodedContent = Buffer.from(JSON.stringify(current), 'utf8').toString('base64');
             
             let update = await fetch(url, { 
                 method: "PUT", 
@@ -30,7 +36,7 @@ export default async function handler(request, response) {
                 }, 
                 body: JSON.stringify({ 
                     message: "Add short via API", 
-                    content: btoa(JSON.stringify(current)), 
+                    content: encodedContent, 
                     sha 
                 }) 
             });
@@ -39,6 +45,8 @@ export default async function handler(request, response) {
             return response.status(500).json({ error: "Failed to update repository database." });
         }
         return response.status(200).json(current);
-    } catch (e) { return response.status(500).json([]); }
+    } catch (e) { 
+        return response.status(500).json({ error: e.message }); 
+    }
 }
 
