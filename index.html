@@ -19,25 +19,25 @@
         .short-section { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background-color: #0b0c10; }
         .short-wrapper { width: 100%; max-width: 90vh; aspect-ratio: 1/1; position: relative; display: flex; align-items: center; background-color: #000000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         .short-wrapper video, .short-wrapper iframe { width: 100%; height: 100%; border: none; object-fit: cover; cursor: pointer; }
-        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; pointer-events: none; }
+        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; }
         .short-overlay h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
-        .short-overlay p { font-size: 11px; color: #a1a1aa; font-family: monospace; }
+        .short-overlay p { font-size: 11px; color: #a1a1aa; font-family: monospace; margin-bottom: 8px; }
     </style>
 </head>
 <body>
     <nav>
         <div class="nav-title">🔥 BLOXDSHORTS</div>
-        <button class="elite-btn" onclick="openModal()">Submit Short</button>
+        <button class="elite-btn" onclick="openModal()">Upload Short</button>
     </nav>
     <div id="link-modal">
         <div class="modal-content">
-            <h2>Submit Bloxd Short</h2>
+            <h2>Inject Bloxd Short</h2>
             <input type="text" id="stream-creator" placeholder="Creator Tag (e.g. Shahadah_Studios)..." class="elite-input">
             <input type="text" id="stream-title" placeholder="Short Title..." class="elite-input">
             <input type="text" id="stream-url" placeholder="Paste YouTube link or MP4/WebM URL..." class="elite-input">
             <div style="display: flex; gap: 12px; justify-content: flex-end;">
                 <button class="elite-btn" style="background:transparent; color:#ffffff; border-color:#1f242e;" onclick="closeModal()">Cancel</button>
-                <button class="elite-btn" onclick="submitLink()">Generate Code</button>
+                <button class="elite-btn" onclick="submitLink()">Publish</button>
             </div>
         </div>
     </div>
@@ -46,33 +46,47 @@
         const container = document.getElementById('shorts-container');
         const openModal = () => document.getElementById('link-modal').style.display = 'flex';
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
+        const getBaseFeeds = () => [{"c":"Shahadah_Studios","t":"Local text","u":"https://image2url.com"},{"c":"Shahadah_Studios","t":"PVP 3rd edition","u":"https://videotourl.com"}];
         function handleVolume(vid) { if(vid.muted){ vid.muted=false; vid.currentTime=0; vid.play(); }else{ vid.paused?vid.play():vid.pause(); } }
-        async function loadSharedLinks() {
+        function shareSingleShort(c, t, u) {
+            const singleVector = btoa(JSON.stringify([{ c, t, u }]));
+            const shareUrl = window.location.origin + window.location.pathname + '?append=' + encodeURIComponent(singleVector);
+            navigator.clipboard.writeText(shareUrl).then(() => alert("Single clip share link copied to clipboard!"));
+        }
+        function loadSharedLinks() {
             try {
-                let res = await fetch(`database.json?t=${Date.now()}`);
-                let links = res.ok ? await res.json() : [];
+                let saved = JSON.parse(localStorage.getItem('sb_shorts_v12') || '[]');
+                if (saved.length === 0) { saved = getBaseFeeds(); localStorage.setItem('sb_shorts_v12', JSON.stringify(saved)); }
+                const params = new URLSearchParams(window.location.search);
+                const appendData = params.get('append');
+                if (appendData) {
+                    const newClips = JSON.parse(atob(decodeURIComponent(appendData)));
+                    newClips.forEach(clip => { if (!saved.some(s => s.u === clip.u)) saved.push(clip); });
+                    localStorage.setItem('sb_shorts_v12', JSON.stringify(saved));
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
                 container.innerHTML = "";
-                if (links.length === 0) { container.innerHTML = '<div class="short-section">Welcome to BloxdShorts! Click Submit to generate clip feed parameters.</div>'; return; }
-                [...links].reverse().forEach((item) => {
+                [...saved].reverse().forEach((item) => {
                     const section = document.createElement('div'); section.className = "short-section";
                     let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
                         `<video src="${item.u}" loop autoplay muted playsinline onclick="handleVolume(this)"></video>` : 
                         `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
-                    section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${item.c}</p></div></div>`;
+                    section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${item.c}</p><button class="elite-btn" style="padding:4px 12px; font-size:10px;" onclick="shareSingleShort('${item.c}','${item.t}','${item.u}')">🔗 Share Clip</button></div></div>`;
                     container.appendChild(section);
                 });
-            } catch (e) { container.innerHTML = '<div class="short-section">Welcome to BloxdShorts! Click Submit to generate clip feed parameters.</div>'; }
+            } catch (e) { container.innerHTML = '<div class="short-section">Data execution fault.</div>'; }
         }
         function submitLink() {
             let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
-            let snippet = `,{"c":"${c}","t":"${t}","u":"${u}"}`;
-            navigator.clipboard.writeText(snippet).then(() => {
-                alert("Success! Your submission code has been copied to your clipboard. Send this code line to @Shahadah_Studios on BloxdHub or Discord to get featured live on the feed!");
-            }).catch(() => { alert("Copy this code line manually:\n" + snippet); });
-            closeModal();
+            let saved = JSON.parse(localStorage.getItem('sb_shorts_v12') || '[]');
+            if (!saved.some(s => s.u === u)) saved.push({ c, t, u });
+            localStorage.setItem('sb_shorts_v12', JSON.stringify(saved));
+            closeModal(); document.getElementById('stream-creator').value = ""; document.getElementById('stream-title').value = ""; document.getElementById('stream-url').value = "";
+            loadSharedLinks();
         }
         loadSharedLinks();
     </script>
 </body>
 </html>
+
