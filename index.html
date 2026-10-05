@@ -1,84 +1,480 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloxdShorts</title> <link rel="icon" type="image/png" href="/bloxd-scene.png?v=1"> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOXDSHORTS</title>
+    <link rel="icon" type="image/png" href="/bloxd-scene.png?v1">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #000000; color: #ffffff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        nav { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; z-index: 50; }
-        .nav-title { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 900; font-size: 22px; color: #ff4757; }
-        .elite-input { padding: 10px 16px; background-color: #11141a; border: 1px solid #1f242e; color: #ffffff; font-size: 13px; font-family: monospace; width: 100%; }
-        .elite-input:focus { border-color: #ff4757; outline: none; }
-        .elite-btn { border: 1px solid #ff4757; background-color: #ff4757; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 20px; font-size: 12px; font-weight: bold; cursor: pointer; color: #ffffff; border-radius: 4px; transition: all 0.2s; }
-        .elite-btn:hover { background-color: transparent; color: #ff4757; }
-        #link-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 100; align-items: center; justify-content: center; }
-        .modal-content { background: #11141a; border: 1px solid #1f242e; padding: 32px; width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 16px; border-radius: 8px; }
-        #shorts-container { width: 100%; height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+        html, body { height: 100%; }
+        body {
+            background: linear-gradient(135deg, #070b14 0%, #0d1320 20%, #181d2d 100%);
+            color: #ffffff;
+            font-family: Inter, "Segoe UI", sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(10, 12, 18, 0.7);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: relative;
+            z-index: 50;
+        }
+        .nav-title {
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 900;
+            font-size: clamp(20px, 2vw, 28px);
+            color: #ff4d5a;
+            text-shadow: 0 0 12px rgba(255,77,90,0.55);
+        }
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .elite-btn {
+            border: 1px solid rgba(255,77,90,0.75);
+            background: linear-gradient(135deg, #ff4d5a, #ff6b5f);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 10px 18px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            color: #ffffff;
+            border-radius: 999px;
+            transition: all 0.2s ease;
+            box-shadow: 0 12px 24px rgba(255,77,90,0.25);
+        }
+        .elite-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 30px rgba(255,77,90,0.4);
+        }
+        .elite-btn.secondary {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.12);
+            box-shadow: none;
+        }
+        #link-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: linear-gradient(180deg, #111827, #0d1320);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 28px;
+            width: min(90vw, 470px);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-radius: 18px;
+            box-shadow: 0 28px 70px rgba(0,0,0,0.45);
+        }
+        .modal-content h2 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #ff7a85;
+        }
+        .elite-input {
+            padding: 12px 14px;
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #ffffff;
+            font-size: 14px;
+            font-family: monospace;
+            width: 100%;
+            border-radius: 10px;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+        .elite-input::placeholder { color: #8a93a7; }
+        .elite-input:focus {
+            border-color: rgba(255, 77, 90, 0.8);
+            box-shadow: 0 0 0 3px rgba(255,77,90,0.18);
+            outline: none;
+        }
+        #shorts-container {
+            width: 100%;
+            height: calc(100vh - 82px);
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            background: radial-gradient(circle at top, rgba(255,77,90,0.12), transparent 35%);
+        }
         #shorts-container::-webkit-scrollbar { display: none; }
-        .short-section { width: 100%; height: 100vh; scroll-snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background-color: #0b0c10; }
-        .short-wrapper { width: 100%; max-width: 90vh; aspect-ratio: 1/1; position: relative; display: flex; align-items: center; background-color: #000000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .short-wrapper video, .short-wrapper iframe { width: 100%; height: 100%; border: none; object-fit: cover; }
-        .short-overlay { position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 10; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px; border-radius: 4px; }
-        .short-overlay h3 { font-size: 15px; font-weight: 800; text-transform: uppercase; margin-bottom: 2px; }
-        .short-overlay p { font-size: 11px; color: #a1a1aa; font-family: monospace; }
+        .short-section {
+            width: 100%;
+            height: calc(100vh - 82px);
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(11, 15, 22, 0.5), rgba(8, 11, 18, 0.9));
+            padding: 18px;
+        }
+        .short-wrapper {
+            width: min(92vw, 480px);
+            aspect-ratio: 1 / 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+        }
+        .short-wrapper video, .short-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: cover;
+            cursor: pointer;
+            background: #000;
+        }
+        .short-overlay {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            top: 16px;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.18));
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .short-overlay h3 {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.04em;
+        }
+        .short-overlay p {
+            font-size: 11px;
+            color: #dfe6f5;
+            font-family: monospace;
+            opacity: 0.9;
+        }
+        .video-controls {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 12px 12px;
+            background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8));
+            border-radius: 12px;
+            opacity: 0.96;
+        }
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .control-btn {
+            border: none;
+            background: rgba(255,77,90,0.22);
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .control-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255,77,90,0.38);
+        }
+        .progress-bar {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+        .progress-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 0%;
+            background: linear-gradient(90deg, #ff4d5a, #ff876a);
+            border-radius: 999px;
+        }
+        .time-display {
+            min-width: 74px;
+            text-align: right;
+            font-size: 11px;
+            color: #dfe6f5;
+            font-family: monospace;
+        }
+        .volume-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .volume-slider {
+            width: 80px;
+            accent-color: #ff4d5a;
+        }
+        .action-buttons {
+            position: absolute;
+            right: 16px;
+            bottom: 76px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 15;
+        }
+        .action-btn {
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,77,90,0.28);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 12px 22px rgba(0,0,0,0.28);
+        }
+        .action-btn:hover { background: rgba(255,77,90,0.44); }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 82px);
+            text-align: center;
+            gap: 14px;
+            color: #dfe6f5;
+        }
+        .empty-state i {
+            font-size: 52px;
+            color: #ff4d5a;
+        }
     </style>
 </head>
 <body>
     <nav>
         <div class="nav-title">🔥 BLOXDSHORTS</div>
-        <div style="display: flex; gap: 12px;">
-            <button class="elite-btn" style="background: transparent; color: #ff4757;" onclick="shareFeed()">Share Feed</button>
+        <div class="nav-actions">
+            <button class="elite-btn secondary" onclick="shareFeed()">Share Feed</button>
             <button class="elite-btn" onclick="openModal()">Upload Short</button>
         </div>
     </nav>
+
     <div id="link-modal">
         <div class="modal-content">
-            <h2 style="text-transform: uppercase; font-size: 16px; color:#ff4757;">Inject Bloxd Short</h2>
+            <h2>Inject Bloxd Short</h2>
             <input type="text" id="stream-creator" placeholder="Creator Tag (e.g. Shahadah_Studios)..." class="elite-input">
             <input type="text" id="stream-title" placeholder="Short Title..." class="elite-input">
             <input type="text" id="stream-url" placeholder="Paste YouTube link or MP4/WebM URL..." class="elite-input">
-            <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                <button class="elite-btn" style="background:transparent; color:#ffffff; border-color:#1f242e;" onclick="closeModal()">Cancel</button>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px;">
+                <button class="elite-btn secondary" onclick="closeModal()">Cancel</button>
                 <button class="elite-btn" onclick="submitLink()">Publish</button>
             </div>
         </div>
     </div>
+
     <div id="shorts-container"></div>
+
     <script>
-        const REG = "W3siYyI6IlNoYWhhZGFoX1N0dWRpb3MiLCJ0IjoiV2VsY29tZSB0byBCbG94ZFNob3J0cyEiLCJ1IjoiaHR0cHM6Ly93d3cuaW1hZ2UydXJsLmNvbS9yMi9kZWZhdWx0L3ZpZGVvcy8xNzg2MzE1MDQ1NzU3LTNjZWI3MzI2LTA2Y2MtNDFiNy05ODVhLTJiM2RjOTU3NWExZS5tcDQifV0=";
+        const REG = "W3siYyI6IlNoYWhhZGFoX1N0dWRpb3MiLCJ0IjoiV2VsY29tZSB0byBCbG94ZFNob3J0cyEiLCJ1IjoiaHR0cHM6Ly93d3cuaW1hZ2UydXJsLmNvbS9yMi9kZWZhdWx0L3ZpZGVvcy8xNzg2MzE1MDQ1NzU3LTNjZWI3MzI2LTA2Y2M3YTc4MjE4ZjY0YWE1YjRkYWI5Y2Y2MWQ1YmU5ZmQ1YzliNTM0YjI5NWQyMGE3Iiwic3VwIjoiZmFsc2UifQ==";
         const container = document.getElementById('shorts-container');
         const openModal = () => document.getElementById('link-modal').style.display = 'flex';
         const closeModal = () => document.getElementById('link-modal').style.display = 'none';
         const getLinks = () => JSON.parse(atob(decodeURIComponent(new URLSearchParams(window.location.search).get('data') || REG)));
-        function shareFeed() { navigator.clipboard.writeText(window.location.href).then(() => alert("Full channel link copied to clipboard!")); }
+
+        function shareFeed() {
+            navigator.clipboard.writeText(window.location.href).then(() => alert("Full channel link copied to clipboard!"));
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || Number.isNaN(seconds)) return '0:00';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function setupVideoControls(video, section) {
+            const playPauseBtn = section.querySelector('.play-pause-btn');
+            const progressBar = section.querySelector('.progress-bar');
+            const progressFill = section.querySelector('.progress-fill');
+            const timeDisplay = section.querySelector('.time-display');
+            const volumeSlider = section.querySelector('.volume-slider');
+            const volumeBtn = section.querySelector('.volume-btn');
+
+            const updateProgress = () => {
+                if (!video.duration) return;
+                const pct = (video.currentTime / video.duration) * 100;
+                progressFill.style.width = pct + '%';
+                timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+            };
+
+            video.addEventListener('timeupdate', updateProgress);
+            video.addEventListener('loadedmetadata', updateProgress);
+            video.addEventListener('play', () => {
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            });
+            video.addEventListener('pause', () => {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            });
+
+            playPauseBtn.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            progressBar.addEventListener('click', (event) => {
+                const rect = progressBar.getBoundingClientRect();
+                const pct = (event.clientX - rect.left) / rect.width;
+                video.currentTime = pct * video.duration;
+            });
+
+            volumeSlider.addEventListener('input', (event) => {
+                video.volume = Number(event.target.value) / 100;
+                video.muted = video.volume === 0;
+                volumeBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            });
+
+            volumeBtn.addEventListener('click', () => {
+                video.muted = !video.muted;
+                volumeBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+                if (!video.muted) {
+                    video.volume = Math.max(video.volume || 0.5, 0.2);
+                }
+            });
+
+            video.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            video.muted = false;
+            video.volume = 1;
+            video.play().catch(() => {});
+        }
+
         function loadSharedLinks() {
             try {
-                let links = getLinks(); container.innerHTML = "";
-                if (links.length === 0) { container.innerHTML = '<div class="short-section">No shorts in the pipeline grid yet.</div>'; return; }
+                let links = getLinks();
+                container.innerHTML = "";
+
+                if (links.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-video-slash"></i><p>No shorts in the pipeline grid yet.</p></div>';
+                    return;
+                }
+
                 links.reverse().forEach((item) => {
-                    const section = document.createElement('div'); section.className = "short-section";
-                    let embed = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm') ? 
-                        `<video src="${item.u}" loop autoplay muted playsinline onclick="this.paused ? this.play() : this.pause()"></video>` : 
-                        `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=1&loop=1" allow="autoplay"></iframe>`;
-                    let tag = item.c || 'Anonymous';
-                    section.innerHTML = `<div class="short-wrapper">${embed}<div class="short-overlay"><h3>${item.t}</h3><p>BY: @${tag}</p></div></div>`;
+                    const section = document.createElement('div');
+                    section.className = 'short-section';
+
+                    const isVideo = item.u.includes('.mp4') || item.u.includes('.mov') || item.u.includes('.webm');
+                    let embed = isVideo
+                        ? `<video src="${item.u}" loop playsinline autoplay muted></video>`
+                        : `<iframe src="${item.u.replace('watch?v=', 'embed/').replace('youtu.be/', '://youtube.com')}?autoplay=1&mute=0&loop=1" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+
+                    section.innerHTML = `
+                        <div class="short-wrapper">
+                            ${embed}
+                            <div class="short-overlay">
+                                <h3>${item.t}</h3>
+                                <p>BY: @${item.c || 'Anonymous'}</p>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn" onclick="shareSingleShort('${String(item.c || 'Anonymous').replace(/'/g, "\\'")}', '${String(item.t || '').replace(/'/g, "\\'")}', '${String(item.u || '').replace(/'/g, "\\'")}')" title="Share clip">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                            ${isVideo ? `
+                                <div class="video-controls">
+                                    <div class="controls-bar">
+                                        <button class="control-btn play-pause-btn"><i class="fas fa-pause"></i></button>
+                                        <div class="progress-bar"><div class="progress-fill"></div></div>
+                                        <div class="time-display">0:00 / 0:00</div>
+                                        <div class="volume-wrap">
+                                            <button class="control-btn volume-btn"><i class="fas fa-volume-up"></i></button>
+                                            <input class="volume-slider" type="range" min="0" max="100" value="100" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+
                     container.appendChild(section);
+
+                    if (isVideo) {
+                        const video = section.querySelector('video');
+                        setupVideoControls(video, section);
+                        video.muted = false;
+                        video.volume = 1;
+                        video.play().catch(() => {});
+                    }
                 });
-            } catch (e) { container.innerHTML = '<div class="short-section">Data corrupted.</div>'; }
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Data corrupted.</p></div>';
+            }
         }
+
+        function shareSingleShort(c, t, u) {
+            const singleVector = btoa(JSON.stringify([{ c, t, u }]));
+            const shareUrl = window.location.origin + window.location.pathname + '?data=' + encodeURIComponent(singleVector);
+            navigator.clipboard.writeText(shareUrl).then(() => alert('Single clip share link copied to clipboard!'));
+        }
+
         function submitLink() {
-            let c = document.getElementById('stream-creator').value.trim() || 'Anonymous', t = document.getElementById('stream-title').value.trim(), u = document.getElementById('stream-url').value.trim();
+            let c = document.getElementById('stream-creator').value.trim() || 'Anonymous';
+            let t = document.getElementById('stream-title').value.trim();
+            let u = document.getElementById('stream-url').value.trim();
             if (!t || !u) return;
-            let links = getLinks(); links.push({ c: c, t: t, u: u });
+
+            let links = getLinks();
+            links.push({ c, t, u });
             let finalUrl = window.location.origin + window.location.pathname + '?data=' + encodeURIComponent(btoa(JSON.stringify(links)));
-            navigator.clipboard.writeText(finalUrl).then(() => { window.location.href = finalUrl; }).catch(() => window.location.href = finalUrl);
+            navigator.clipboard.writeText(finalUrl).then(() => {
+                window.location.href = finalUrl;
+            }).catch(() => {
+                window.location.href = finalUrl;
+            });
             closeModal();
         }
+
+        document.getElementById('link-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'link-modal') closeModal();
+        });
+
         loadSharedLinks();
     </script>
 </body>
 </html>
-
-
